@@ -1,0 +1,11 @@
+MANIFEST.MF
+**/*.sass-cache/
+**/node_modules/
+**/target
+**/out/
+.eslintcache
+**/*/coverage
+.settings
+.DS_Store
+.classpath
+.project

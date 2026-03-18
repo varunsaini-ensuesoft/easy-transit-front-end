@@ -1,0 +1,177 @@
+def gitBranch = scm.branches[0].name 
+def gitUrl = scm.userRemoteConfigs[0].url 
+def project 
+def projectVersion
+def projectArtifact
+def projectGroup
+def projectSettings = "HE002_EST_SETTINGS" 
+//def dev_api_base_uri = "http://149.202.124.65:8085/api/admin"
+def hml_api_base_uri = "http://ec2-35-180-103-212.eu-west-3.compute.amazonaws.com:8085/api/admin"
+//def dev_api_host = "http://149.202.124.65:8085"
+def hml_api_host = "http://ec2-35-180-103-212.eu-west-3.compute.amazonaws.com:8085"
+//final String sonar_profile = "Digital" 
+//final String sonar_quality_gate = "EasyTransit_GO" 
+//final String sonarPreparationJob = "generic_jobs/generic_sonar7_project" 
+
+node('ovh1') { 
+    env.M2_HOME = tool 'MAVEN_3.3.9' 
+    env.JAVA_HOME = tool 'JDK_1.8.0_101' 
+    env.NODE_HOME = tool 'NodeJS_13_12_0'
+    env.NPM_HOME = tool 'NPM_6_14_4'
+    //env.SCANNER_HOME = tool 'generic_scanner_3.3' 
+    env.PATH = "${env.JAVA_HOME}/bin:${env.M2_HOME}/bin:${env.NODE_HOME}/bin:${env.NPM_HOME}/bin:${env.PATH}" 
+    def mavenLocalRepo = env.WORKSPACE.split('workspace')[0] + "maven-repositories/${EXECUTOR_NUMBER}" 
+
+    ws("${pwd()}/build_${env.BUILD_NUMBER}") {
+        stage ('Checkout') { 
+            checkout([ $class: 'GitSCM', 
+            branches: [[name: gitBranch]], 
+            doGenerateSubmoduleConfigurations: false, 
+            userRemoteConfigs: [[credentialsId: 'pat_hentech_github_jenkins', url: gitUrl]] 
+
+            ]) 
+
+            sh 'git log -1 > GIT_LOG' 
+            git_log = readFile 'GIT_LOG' 
+            echo git_log 
+            if (git_log.contains('[maven-release-plugin]')) { 
+                echo "Stoping pipeline : last commit made by Maven release plugin" 
+                currentBuild.result = 'ABORTED' 
+                assert false 
+            } 
+            project = readMavenPom file: "pom.xml" 
+        }
+        stage('Build & push to Nexus'){
+            withCredentials([
+                    usernamePassword(credentialsId: 'API_BASE_URL', usernameVariable: 'api_base_url_not_used', passwordVariable: 'dev_api_base_uri'),
+                    usernamePassword(credentialsId: 'API_HOST', usernameVariable: 'api_host_not_used', passwordVariable: 'dev_api_host')])
+                    {
+                        configFileProvider([configFile(fileId: 'HE002_EST_SETTINGS', variable: 'MAVEN_SETTINGS'), configFile(fileId: 'HENTECH_GLOBAL_MAVEN_SETTINGS', variable: 'GLOBAL_SETTINGS'), configFile(fileId: 'HENTECH_GLOBAL_NPM_SETTINGS', variable: 'GLOBAL_NPM_SETTINGS')]) { 
+                    
+                        sh """#!/bin/bash 
+                            set +x
+                        """
+                        sh  """
+                            sed -e "s#@@API_BASE_URI@@#$dev_api_base_uri#g" -e "s#@@HOST@@#$dev_api_host#g" src/config.ts > src/config_dev.ts
+                            rm -Rf src/config.ts
+                            mv src/config_dev.ts src/config.ts
+                            mvn -s ${MAVEN_SETTINGS} -gs ${GLOBAL_SETTINGS} -Phudson-spice -Dmaven.repo.local=${mavenLocalRepo} -DskipTests -Dglobal_npm_settings=${GLOBAL_NPM_SETTINGS} clean deploy 
+                        """             
+                }
+                
+            }
+        }
+
+        stage('Sonar Analysis'){ 
+            echo "To Do"
+        }
+    }
+}
+node('deploy-new') { 
+    ws("${pwd()}/build_${env.BUILD_NUMBER}") {
+        stage ('Deploy on DEV') { 
+            projectVersion = project.version
+            projectArtifact = project.artifactId
+            projectGroup = project.groupId
+            sh """
+                      ls
+            """
+            echo "################# Deploying package " + projectArtifact + "-" + projectVersion + ".jar from Nexus to DEV Env ############"
+            sh """
+               wget 'http://5.196.249.203:8082/nexus/service/local/artifact/maven/content?g=$projectGroup&a=$projectArtifact&v=$projectVersion&c=resource&r=central-all' -O siteweb-admin-frontend.jar
+               unzip -qq siteweb-admin-frontend.jar
+               rm -rf ~/install/apache/easytransit-admin-site/*
+               ls -lart siteweb-admin-frontend/$projectVersion
+               cp -R siteweb-admin-frontend/$projectVersion/* ~/install/apache/easytransit-admin-site
+               cp ~/.htaccess ~/install/apache/easytransit-admin-site
+               rm -rf siteweb-admin-frontend/ siteweb-admin-frontend.jar
+            """
+        }
+
+    }
+
+}
+node('deploy-hml') { 
+    env.M2_HOME = tool 'MAVEN_3.3.9' 
+    env.JAVA_HOME = tool 'JDK_1.8.0_101' 
+    env.NODE_HOME = tool 'NodeJS_13_12_0'
+    env.NPM_HOME = tool 'NPM_6_14_4'
+    //env.SCANNER_HOME = tool 'generic_scanner_3.3' 
+    env.PATH = "${env.JAVA_HOME}/bin:${env.M2_HOME}/bin:${env.NODE_HOME}/bin:${env.NPM_HOME}/bin:${env.PATH}" 
+    def mavenLocalRepo = env.WORKSPACE.split('workspace')[0] + "maven-repositories/${EXECUTOR_NUMBER}" 
+
+    ws("${pwd()}/build_${env.BUILD_NUMBER}") { 
+        stage("Release"){ 
+            timeout(time: 10, unit: 'MINUTES'){
+            def userInput = input( 
+            id: 'userInput', message: 'Do you want to release this build ?', ok: 'Release', parameters: [
+                [$class: 'TextParameterDefinition', defaultValue: project.version.replace('-SNAPSHOT', ''), description: 'Version', name: 'releaseVersion']
+            ]) 
+                waitUntil { 
+                    sh """
+                      ls
+                    """
+                    try { 
+                        checkout([$class: 'GitSCM', 
+                           branches: [[name: gitBranch]], doGenerateSubmoduleConfigurations: false, 
+                           extensions: [[$class: 'LocalBranch', localBranch: gitBranch]], 
+                           submoduleCfg: [], userRemoteConfigs: [[credentialsId: 'pat_hentech_github_jenkins', url: gitUrl]]
+                        ])
+                        configFileProvider([configFile(fileId: 'HE002_EST_SETTINGS', variable: 'MAVEN_SETTINGS'), configFile(fileId: 'HENTECH_GLOBAL_MAVEN_SETTINGS', variable: 'GLOBAL_SETTINGS'), configFile(fileId: 'HE002_EST_NPM_SETTINGS', variable: 'NPM_SETTINGS'), configFile(fileId: 'HENTECH_GLOBAL_NPM_SETTINGS', variable: 'GLOBAL_NPM_SETTINGS')]) { 
+                          withCredentials([
+                              usernamePassword(credentialsId: 'pat_hentech_github_jenkins', usernameVariable: 'GIT_CREDS_USER', passwordVariable: 'GIT_CREDS_PWD')
+                            ]){
+                                sh """
+                                    ls -lart src/
+                                    cat src/config.js
+                                    sed -e \"s#@@API_BASE_URI@@#$hml_api_base_uri#g\" -e \"s#@@HOST@@#$hml_api_host#g\" src/config.js > src/config1.js
+                                    mv src/config1.js src/config.js
+                                    ls -lart src/
+                                    cat src/config.js
+                                    mvn -s ${MAVEN_SETTINGS} -gs ${GLOBAL_SETTINGS} -Prelease-npm -Dmaven.repo.local=${mavenLocalRepo} -DskipTests -DreleaseVersion=${userInput} -Dglobal_npm_settings=${GLOBAL_NPM_SETTINGS} -Dnpm_settings=${NPM_SETTINGS} -Dnpm.publish=true clean release:prepare release:perform -Dusername=${GIT_CREDS_USER} -Dpassword=${GIT_CREDS_PWD}
+                                """
+                            }
+                          //sh '''
+                            //  mvn -s ${MAVEN_SETTINGS} -gs ${GLOBAL_SETTINGS} -Prelease-npm -Dmaven.repo.local=${mavenLocalRepo} -DskipTests -DreleaseVersion=${userInput} -Dglobal_npm_settings=${GLOBAL_NPM_SETTINGS} -Dnpm_settings=${NPM_SETTINGS} -Dnpm.publish=true clean release:prepare release:perform 
+                          //'''
+                        }
+                        /*configFileProvider([configFile(fileId: 'HE002_EST_SETTINGS', variable: 'MAVEN_SETTINGS'), configFile(fileId: 'HENTECH_GLOBAL_MAVEN_SETTINGS', variable: 'GLOBAL_SETTINGS'), configFile(fileId: 'HENTECH_GLOBAL_NPM_SETTINGS', variable: 'GLOBAL_NPM_SETTINGS')]) { 
+                            sh '''
+                                mvn -s ${MAVEN_SETTINGS} -gs ${GLOBAL_SETTINGS} -Phudson-spice -Dmaven.repo.local=${mavenLocalRepo} -DskipTests -Dglobal_npm_settings=${GLOBAL_NPM_SETTINGS} -Dnpm.publish=true clean release:prepare release:perform
+                            '''
+                        }*/
+                       
+                        currentBuild.displayName += " REL v${userInput}" 
+                        return true 
+                    } 
+                    catch(error) { 
+                        write error  
+                        input "Retry the job ?" 
+                        return false
+                    }
+                }
+            }
+        }
+    }
+}
+node('deploy-hml') { 
+    ws("${pwd()}/build_${env.BUILD_NUMBER}") {
+        stage ('Deploy on HML') { 
+            projectVersion = project.version.replace('-SNAPSHOT', '')
+            projectArtifact = project.artifactId
+            projectGroup = project.groupId
+            echo "################# Deploying package " + projectArtifact + "-" + projectVersion + ".jar from Nexus to HML Env ############"
+            sh """
+               wget 'http://5.196.249.203:8082/nexus/service/local/artifact/maven/content?g=$projectGroup&a=$projectArtifact&v=$projectVersion&c=resource&r=central-all' -O siteweb-admin-frontend.jar
+               unzip -qq siteweb-admin-frontend.jar
+               rm -rf ~/apps/apache/easytransit-admin-site/*
+               cp -R siteweb-admin-frontend/$projectVersion/* ~/apps/apache/easytransit-admin-site
+               cp ~/.htaccess ~/apps/apache/easytransit-admin-site
+               rm -rf siteweb-admin-frontend/ siteweb-admin-frontend.jar
+            """
+        }
+
+    }
+
+}
+
