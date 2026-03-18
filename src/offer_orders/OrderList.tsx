@@ -5,17 +5,9 @@ import {
     TextField,
     DateField,
     ChipField,
-    ExportButton,
     useListContext,
 } from "react-admin";
-import {
-    Box,
-    IconButton,
-    Tooltip,
-    Tabs,
-    Tab,
-} from "@mui/material";
-import FilterAltOffIcon from "@mui/icons-material/FilterAltOff";
+import { Box, Tabs, Tab } from "@mui/material";
 
 const Title = () => {
     return <span>Liste des commandes</span>;
@@ -53,11 +45,11 @@ const TypeFilterTabs = () => {
         <Tabs
             value={currentType}
             onChange={handleChange}
-            sx={{
+            sx={(theme) => ({
                 minHeight: 48,
                 "& .MuiTabs-indicator": {
                     height: 2,
-                    backgroundColor: "#1976d2",
+                    backgroundColor: theme.palette.primary.main,
                 },
                 "& .MuiTab-root": {
                     minHeight: 48,
@@ -65,13 +57,13 @@ const TypeFilterTabs = () => {
                     textTransform: "uppercase",
                     fontSize: "0.85rem",
                     fontWeight: 500,
-                    color: "#4b5563",
+                    color: theme.palette.text.secondary,
                 },
                 "& .MuiTab-root.Mui-selected": {
-                    color: "#1976d2",
+                    color: theme.palette.primary.main,
                     fontWeight: 600,
                 },
-            }}
+            })}
         >
             <Tab label="Public orders" value="public" />
             <Tab label="Private orders" value="private" />
@@ -80,67 +72,20 @@ const TypeFilterTabs = () => {
     );
 };
 
-// const ClearFiltersButton = () => {
-//     const { filterValues, setFilters } = useListContext();
-
-//     const hasExtraFilters = Object.keys(filterValues || {}).some(
-//         (key) => key !== "type"
-//     );
-
-//     if (!hasExtraFilters) return null;
-
-//     const handleClear = () => {
-//         setFilters({ type: "public" }, []);
-//     };
-
-//     return (
-//         <Tooltip title="Remove all filters">
-//             <IconButton
-//                 onClick={handleClear}
-//                 size="small"
-//                 sx={{
-//                     color: "#6b7280",
-//                     border: "1px solid #d1d5db",
-//                     borderRadius: 2,
-//                     width: 34,
-//                     height: 34,
-//                     "&:hover": {
-//                         backgroundColor: "#f3f4f6",
-//                     },
-//                 }}
-//             >
-//                 <FilterAltOffIcon fontSize="small" />
-//             </IconButton>
-//         </Tooltip>
-//     );
-// };
-
 const OrdersListContent = () => {
     return (
         <Box>
             <Box
-                sx={{
+                sx={(theme) => ({
                     display: "flex",
                     justifyContent: "space-between",
                     alignItems: "center",
-                    borderBottom: "1px solid #e5e7eb",
-                    backgroundColor: "#fff",
+                    borderBottom: `1px solid ${theme.palette.divider}`,
+                    backgroundColor: theme.palette.background.paper,
                     mb: 2,
-                }}
+                })}
             >
                 <TypeFilterTabs />
-
-                {/* <Box
-                    sx={{
-                        display: "flex",
-                        alignItems: "center",
-                        gap: 1,
-                        pr: 1,
-                    }}
-                >
-                    <ClearFiltersButton />
-                    <ExportButton />
-                </Box> */}
             </Box>
 
             <Datagrid rowClick="show" bulkActionButtons={false}>
@@ -160,22 +105,25 @@ const OrderList = (props: any) => (
         actions={false}
         filterDefaultValues={{ type: "public" }}
         {...props}
-        sx={{
+        sx={(theme) => ({
             "& .RaList-main": {
-                backgroundColor: "#fff",
+                backgroundColor: theme.palette.background.paper,
             },
             "& .RaDatagrid-root": {
-                border: "1px solid #e5e7eb",
+                border: `1px solid ${theme.palette.divider}`,
                 borderRadius: 2,
                 overflow: "hidden",
-                backgroundColor: "#fff",
+                backgroundColor: theme.palette.background.paper,
             },
             "& .RaDatagrid-headerCell": {
-                backgroundColor: "#fff",
+                backgroundColor: theme.palette.background.default,
                 fontWeight: 700,
-                borderBottom: "1px solid #e5e7eb",
+                borderBottom: `1px solid ${theme.palette.divider}`,
             },
-        }}
+            "& .RaDatagrid-row, & .RaDatagrid-rowCell": {
+                backgroundColor: "transparent",
+            },
+        })}
     >
         <OrdersListContent />
     </List>
