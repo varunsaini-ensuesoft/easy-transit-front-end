@@ -24,5 +24,10 @@ export default defineConfig({
     server: {
         host: true,
     },
+    preview: {
+    host: true,
+    port: 4173,
+    allowedHosts: ['easy-transit-front-end.onrender.com'],
+  },
     base: './',
 });
