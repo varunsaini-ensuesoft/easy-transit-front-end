@@ -328,7 +328,7 @@ export const OffersForRequest = () => {
   if (!record) return null;
 
   return (
-    <List resource="offers">
+    <List resource="offers" filter={{ request: record.id }}>
       <Datagrid>
         <Datagrid>
           <TextField source="amount" />
