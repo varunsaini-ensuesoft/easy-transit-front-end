@@ -4,10 +4,14 @@ const FilePreview = ({
   url,
   fileName,
   isImage = true,
+  width = 220,
+  imageHeight = 140,
 }: {
   url?: string;
   fileName?: string;
   isImage?: boolean;
+  width?: number | string;
+  imageHeight?: number | string;
 }) => {
 
   // 🚫 No file → show clean message only
@@ -18,7 +22,7 @@ const FilePreview = ({
           border: "1px dashed #ccc",
           borderRadius: 2,
           p: 2,
-          width: 220,
+          width,
           textAlign: "center",
           color: "#999",
           bgcolor: "#fafafa",
@@ -35,7 +39,7 @@ const FilePreview = ({
         border: "1px solid #e0e0e0",
         borderRadius: 2,
         p: 2,
-        width: 220,
+        width,
         bgcolor: "#fafafa",
         textAlign: "center",
       }}
@@ -47,7 +51,7 @@ const FilePreview = ({
           alt="preview"
           sx={{
             width: "100%",
-            height: 140,
+            height: imageHeight,
             objectFit: "contain",
             mb: 1,
           }}

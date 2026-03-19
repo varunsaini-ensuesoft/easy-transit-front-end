@@ -8,8 +8,18 @@ import Requests from "../requests/index";
 
 const Aside = () => {
   const record = useRecordContext();
+
   return (
-    <Box width={400} display={{ xs: "none", lg: "block" }}>
+    <Box
+      sx={{
+        display: { xs: "none", lg: "block" },
+        width: 400,
+        minWidth: 400,
+        maxWidth: 400,
+        flex: "0 0 400px",
+        boxSizing: "border-box",
+      }}
+    >
       {/*record && <AsideActions />*/}
       {record && <RelatedObjects />}
       {/*record && <HistoryBoxEx/>*/}
