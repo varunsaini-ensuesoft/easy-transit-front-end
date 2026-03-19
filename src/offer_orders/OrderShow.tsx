@@ -36,7 +36,7 @@ import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
 
 import MuTextField from "@mui/material/TextField";
-import { makeStyles } from "@mui/material/styles";
+import { alpha, makeStyles, useTheme } from "@mui/material/styles";
 import CollapsibleTableEx from "../shows/CollapsibleTableEx";
 import Aside from "./Aside";
 import {
@@ -89,48 +89,59 @@ const TitleValue = ({
   </Box>
 );
 
-const getTrackingStatusConfig = (status?: string) => {
+const getTrackingStatusConfig = (theme: any, status?: string) => {
   switch (status) {
     case "Délivré":
       return {
         chipLabel: "Délivré",
-        chipBg: "#e8f5e9",
-        chipColor: "#2e7d32",
-        icon: <CheckCircleRoundedIcon sx={{ color: "#fff", fontSize: 18 }} />,
-        dotBg: "#2e7d32",
-        borderColor: "#c8e6c9",
-        cardBg: "#f7fcf8",
+        chipBg: alpha(theme.palette.success.main, 0.12),
+        chipColor: theme.palette.success.dark,
+        icon: (
+          <CheckCircleRoundedIcon
+            sx={{ color: theme.palette.common.white, fontSize: 18 }}
+          />
+        ),
+        dotBg: theme.palette.success.main,
+        borderColor: alpha(theme.palette.success.main, 0.25),
+        cardBg: alpha(theme.palette.success.main, 0.04),
         isDone: true,
       };
     case "En attente":
       return {
         chipLabel: "En attente",
-        chipBg: "#fff3e0",
-        chipColor: "#ed6c02",
+        chipBg: alpha(theme.palette.warning.main, 0.12),
+        chipColor: theme.palette.warning.dark,
         icon: (
-          <HourglassEmptyRoundedIcon sx={{ color: "#fff", fontSize: 18 }} />
+          <HourglassEmptyRoundedIcon
+            sx={{ color: theme.palette.common.white, fontSize: 18 }}
+          />
         ),
-        dotBg: "#ed6c02",
-        borderColor: "#ffe0b2",
-        cardBg: "#fffaf3",
+        dotBg: theme.palette.warning.main,
+        borderColor: alpha(theme.palette.warning.main, 0.25),
+        cardBg: alpha(theme.palette.warning.main, 0.04),
         isDone: false,
       };
     default:
       return {
         chipLabel: status || "Inconnu",
-        chipBg: "#f3f4f6",
-        chipColor: "#4b5563",
-        icon: <DescriptionOutlinedIcon sx={{ color: "#fff", fontSize: 18 }} />,
-        dotBg: "#94a3b8",
-        borderColor: "#e5e7eb",
-        cardBg: "#ffffff",
+        chipBg: alpha(theme.palette.text.secondary, 0.12),
+        chipColor: theme.palette.text.secondary,
+        icon: (
+          <DescriptionOutlinedIcon
+            sx={{ color: theme.palette.common.white, fontSize: 18 }}
+          />
+        ),
+        dotBg: theme.palette.text.secondary,
+        borderColor: theme.palette.divider,
+        cardBg: theme.palette.background.paper,
         isDone: false,
       };
   }
 };
 
 const TrackingStatusChip = ({ status }: { status?: string }) => {
-  const config = getTrackingStatusConfig(status);
+  const theme = useTheme();
+  const config = getTrackingStatusConfig(theme, status);
 
   return (
     <Chip
@@ -147,6 +158,7 @@ const TrackingStatusChip = ({ status }: { status?: string }) => {
 };
 
 const TrackingDetailsInline = () => {
+  const theme = useTheme();
   const record = useRecordContext();
   if (!record) return null;
 
@@ -155,13 +167,13 @@ if (!trackingSteps.length) {
     return (
         <Box
             mt={2}
-            sx={{
+            sx={(theme) => ({
                 p: 3,
-                border: '1px dashed #e5e7eb',
+                border: `1px dashed ${theme.palette.divider}`,
                 borderRadius: 2,
                 textAlign: 'center',
-                backgroundColor: '#f9fafb',
-            }}
+                backgroundColor: alpha(theme.palette.text.secondary, 0.04),
+            })}
         >
             <Typography variant="body2" sx={{ fontWeight: 600 }}>
                 No Accepted Offer Yet
@@ -186,12 +198,12 @@ if (!trackingSteps.length) {
   return (
     <Box
       mt={2}
-      sx={{
-        width: "100%",
-        maxWidth: "100%",
-        minWidth: 0,
-        overflowX: "hidden",
-      }}
+        sx={(theme) => ({
+          width: "100%",
+          maxWidth: "100%",
+          minWidth: 0,
+          overflowX: "hidden",
+        })}
     >
       <Box display="flex" alignItems="center" gap={1} mb={1}>
         <LocalShippingOutlinedIcon color="action" />
@@ -200,27 +212,27 @@ if (!trackingSteps.length) {
 
       {/* same parent box for everything */}
       <Box
-        sx={{
+        sx={(theme) => ({
           width: "100%",
           maxWidth: "100%",
           minWidth: 0,
-          border: "1px solid #e5e7eb",
+          border: `1px solid ${theme.palette.divider}`,
           borderRadius: 2,
-          backgroundColor: "#fff",
+          backgroundColor: theme.palette.background.paper,
           p: 2,
-        }}
+        })}
       >
         <Box
-          sx={{
+          sx={(theme) => ({
             p: 2,
             borderRadius: 2,
-            backgroundColor: "#f8fafc",
-            border: "1px solid #e5e7eb",
+            backgroundColor: alpha(theme.palette.primary.main, 0.04),
+            border: `1px solid ${theme.palette.divider}`,
             mb: 2,
             width: "100%",
             maxWidth: "100%",
             minWidth: 0,
-          }}
+          })}
         >
           <Stack spacing={1.5}>
             <TitleValue label="Connaissement" value={connaissement || "-"} />
@@ -243,11 +255,14 @@ if (!trackingSteps.length) {
               <LinearProgress
                 variant="determinate"
                 value={progress}
-                sx={{
+                sx={(theme) => ({
                   height: 8,
                   borderRadius: 999,
-                  backgroundColor: "#e5e7eb",
-                }}
+                  backgroundColor: alpha(theme.palette.primary.main, 0.12),
+                  "& .MuiLinearProgress-bar": {
+                    backgroundColor: theme.palette.primary.main,
+                  },
+                })}
               />
             </Box>
           </Stack>
@@ -255,7 +270,7 @@ if (!trackingSteps.length) {
 
         {/* scroll happens here */}
         <Box
-          sx={{
+          sx={(theme) => ({
             width: "100%",
             maxWidth: "100%",
             minWidth: 0,
@@ -269,18 +284,18 @@ if (!trackingSteps.length) {
               width: 8,
             },
             "&::-webkit-scrollbar-track": {
-              background: "#f3f4f6",
+              background: alpha(theme.palette.text.secondary, 0.08),
               borderRadius: 999,
             },
             "&::-webkit-scrollbar-thumb": {
-              background: "#cbd5e1",
+              background: alpha(theme.palette.text.secondary, 0.24),
               borderRadius: 999,
             },
-          }}
+          })}
         >
           <Stepper orientation="vertical" nonLinear>
             {trackingSteps.map((step: any, index: number) => {
-              const config = getTrackingStatusConfig(step?.statut);
+              const config = getTrackingStatusConfig(theme, step?.statut);
 
               return (
                 <Step key={step?._id || index} active completed={config.isDone}>
@@ -653,8 +668,13 @@ const PaymentDrawer = ({
   return (
     <Drawer anchor="right" open={open}>
       <Box sx={{ width: 350 }} role="presentation">
-        <Toolbar sx={{ backgroundColor: "#2196f3" }}>
-          <Typography sx={{ color: "white" }} variant="subtitle2" noWrap>
+        <Toolbar
+          sx={(theme) => ({
+            backgroundColor: theme.palette.primary.main,
+            color: theme.palette.primary.contrastText,
+          })}
+        >
+          <Typography sx={{ color: "inherit" }} variant="subtitle2" noWrap>
             {"Creation/Modification > "}
           </Typography>
         </Toolbar>

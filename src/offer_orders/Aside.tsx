@@ -18,6 +18,7 @@ import {
     StepLabel,
     StepContent,
 } from '@mui/material';
+import { alpha, useTheme } from '@mui/material/styles';
 
 import CheckCircleRoundedIcon from '@mui/icons-material/CheckCircleRounded';
 import HourglassEmptyRoundedIcon from '@mui/icons-material/HourglassEmptyRounded';
@@ -42,37 +43,38 @@ const TitleValue = ({ label, value }: { label: string; value?: React.ReactNode }
     </Box>
 );
 
-const getTrackingStatusConfig = (status?: string) => {
+const getTrackingStatusConfig = (theme: any, status?: string) => {
     switch (status) {
         case 'Délivré':
             return {
                 chipLabel: 'Délivré',
-                chipBg: '#e8f5e9',
-                chipColor: '#2e7d32',
-                icon: <CheckCircleRoundedIcon sx={{ color: '#2e7d32' }} />,
+                chipBg: alpha(theme.palette.success.main, 0.12),
+                chipColor: theme.palette.success.dark,
+                icon: <CheckCircleRoundedIcon sx={{ color: theme.palette.success.main }} />,
                 isDone: true,
             };
         case 'En attente':
             return {
                 chipLabel: 'En attente',
-                chipBg: '#fff3e0',
-                chipColor: '#ed6c02',
-                icon: <HourglassEmptyRoundedIcon sx={{ color: '#ed6c02' }} />,
+                chipBg: alpha(theme.palette.warning.main, 0.12),
+                chipColor: theme.palette.warning.dark,
+                icon: <HourglassEmptyRoundedIcon sx={{ color: theme.palette.warning.main }} />,
                 isDone: false,
             };
         default:
             return {
                 chipLabel: status || 'Inconnu',
-                chipBg: '#f3f4f6',
-                chipColor: '#4b5563',
-                icon: <DescriptionOutlinedIcon sx={{ color: '#6b7280' }} />,
+                chipBg: alpha(theme.palette.text.secondary, 0.12),
+                chipColor: theme.palette.text.secondary,
+                icon: <DescriptionOutlinedIcon sx={{ color: theme.palette.text.secondary }} />,
                 isDone: false,
             };
     }
 };
 
 const TrackingStatusChip = ({ status }: { status?: string }) => {
-    const config = getTrackingStatusConfig(status);
+    const theme = useTheme();
+    const config = getTrackingStatusConfig(theme, status);
 
     return (
         <Chip
@@ -89,6 +91,7 @@ const TrackingStatusChip = ({ status }: { status?: string }) => {
 };
 
 const TrackingDetails = () => {
+    const theme = useTheme();
     const record = useRecordContext();
     if (!record) return null;
 
@@ -114,11 +117,11 @@ const TrackingDetails = () => {
                 }}
             >
                 <CardContent
-                    sx={{
+                    sx={(theme) => ({
                         pb: 2,
-                        borderBottom: '1px solid #e5e7eb',
+                        borderBottom: `1px solid ${theme.palette.divider}`,
                         flexShrink: 0,
-                    }}
+                    })}
                 >
                     <Box display="flex" alignItems="center" gap={1} mb={1}>
                         <LocalShippingOutlinedIcon color="action" />
@@ -128,12 +131,12 @@ const TrackingDetails = () => {
                     </Box>
 
                     <Box
-                        sx={{
+                        sx={(theme) => ({
                             p: 1.5,
                             borderRadius: 2,
-                            backgroundColor: '#f8fafc',
-                            border: '1px solid #e5e7eb',
-                        }}
+                            backgroundColor: alpha(theme.palette.primary.main, 0.04),
+                            border: `1px solid ${theme.palette.divider}`,
+                        })}
                     >
                         <Stack spacing={1.5}>
                             <TitleValue
@@ -159,11 +162,14 @@ const TrackingDetails = () => {
                                 <LinearProgress
                                     variant="determinate"
                                     value={progress}
-                                    sx={{
+                                    sx={(theme) => ({
                                         height: 8,
                                         borderRadius: 999,
-                                        backgroundColor: '#e5e7eb',
-                                    }}
+                                        backgroundColor: alpha(theme.palette.primary.main, 0.12),
+                                        '& .MuiLinearProgress-bar': {
+                                            backgroundColor: theme.palette.primary.main,
+                                        },
+                                    })}
                                 />
                             </Box>
                         </Stack>
@@ -171,7 +177,7 @@ const TrackingDetails = () => {
                 </CardContent>
 
                 <Box
-                    sx={{
+                    sx={(theme) => ({
                         overflowY: 'auto',
                         px: 2,
                         py: 1,
@@ -183,21 +189,21 @@ const TrackingDetails = () => {
                             width: 8,
                         },
                         '&::-webkit-scrollbar-track': {
-                            background: '#f3f4f6',
+                            background: alpha(theme.palette.text.secondary, 0.08),
                             borderRadius: 999,
                         },
                         '&::-webkit-scrollbar-thumb': {
-                            background: '#cbd5e1',
+                            background: alpha(theme.palette.text.secondary, 0.24),
                             borderRadius: 999,
                         },
                         '&::-webkit-scrollbar-thumb:hover': {
-                            background: '#94a3b8',
+                            background: alpha(theme.palette.text.secondary, 0.4),
                         },
-                    }}
+                    })}
                 >
                     <Stepper orientation="vertical" nonLinear>
                         {trackingSteps.map((step: any, index: number) => {
-                            const config = getTrackingStatusConfig(step?.statut);
+                            const config = getTrackingStatusConfig(theme, step?.statut);
 
                             return (
                                 <Step
