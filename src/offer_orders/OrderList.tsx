@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import {
     List,
     Datagrid,
@@ -7,8 +7,16 @@ import {
     ChipField,
     useListContext,
     useGetOne,
+    FunctionField,
 } from "react-admin";
-import { Box, Tabs, Tab } from "@mui/material";
+import {
+    Box,
+    Tabs,
+    Tab,
+    TextField as MuiTextField,
+    InputAdornment,
+} from "@mui/material";
+import SearchIcon from "@mui/icons-material/Search";
 import { useLocation } from "react-router-dom";
 
 const Title = () => {
@@ -27,8 +35,9 @@ const ResetOrdersFiltersOnPlainRoute = () => {
             const hasStaleUserFilter = !!filterValues?.["offer.request.user"];
             const hasNonDefaultType =
                 !!filterValues?.type && filterValues.type !== "public";
+            const hasSearch = !!filterValues?.q;
 
-            if (hasStaleUserFilter || hasNonDefaultType) {
+            if (hasStaleUserFilter || hasNonDefaultType || hasSearch) {
                 setFilters({ type: "public" }, [], true);
             }
         }
@@ -36,6 +45,7 @@ const ResetOrdersFiltersOnPlainRoute = () => {
         location.search,
         filterValues?.["offer.request.user"],
         filterValues?.type,
+        filterValues?.q,
         setFilters,
     ]);
 
@@ -148,6 +158,61 @@ const TypeFilterTabs = () => {
     );
 };
 
+const OrdersSearchInput = () => {
+    const { filterValues, setFilters } = useListContext();
+    const [search, setSearch] = useState(filterValues?.q || "");
+
+    useEffect(() => {
+        setSearch(filterValues?.q || "");
+    }, [filterValues?.q]);
+
+    useEffect(() => {
+        const timeout = setTimeout(() => {
+            const trimmedValue = search.trim();
+
+            const nextFilters: any = {
+                ...filterValues,
+            };
+
+            if (trimmedValue) {
+                nextFilters.q = trimmedValue;
+            } else {
+                delete nextFilters.q;
+            }
+
+            if (!nextFilters.type) {
+                nextFilters.type = "public";
+            }
+
+            if (nextFilters.q !== filterValues?.q) {
+                setFilters(nextFilters, [], true);
+            }
+        }, 500);
+
+        return () => clearTimeout(timeout);
+    }, [search]);
+
+    return (
+        <MuiTextField
+            size="small"
+            placeholder="Search orders..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            sx={{
+                minWidth: 280,
+                maxWidth: 360,
+            }}
+            InputProps={{
+                startAdornment: (
+                    <InputAdornment position="start">
+                        <SearchIcon fontSize="small" />
+                    </InputAdornment>
+                ),
+            }}
+        />
+    );
+};
+
 const OrdersListContent = () => {
     const { total, isPending } = useListContext();
 
@@ -160,12 +225,16 @@ const OrdersListContent = () => {
                     display: "flex",
                     justifyContent: "space-between",
                     alignItems: "center",
+                    gap: 2,
+                    flexWrap: "wrap",
                     borderBottom: `1px solid ${theme.palette.divider}`,
                     backgroundColor: theme.palette.background.paper,
                     mb: 2,
+                    pb: 1,
                 })}
             >
                 <TypeFilterTabs />
+                <OrdersSearchInput />
             </Box>
 
             {!isPending && total === 0 ? (
@@ -174,11 +243,31 @@ const OrdersListContent = () => {
                 </Box>
             ) : (
                 <Datagrid rowClick="show" bulkActionButtons={false}>
-                    <TextField label="Offre" source="offer" />
+                    <FunctionField
+                        label="Offre"
+                        render={(record: any) => record?.offer?._id || "-"}
+                    />
+
                     <TextField label="Commentaire" source="comment" />
                     <DateField label="Créé le" source="date_creation" />
                     <DateField label="Livraison le" source="delivery_date" />
                     <ChipField label="Statut" source="status" />
+
+                    <FunctionField
+                        label="Client"
+                        render={(record: any) => {
+                            const user = record?.offer?.request?.user;
+                            return user ? `${user.first_name} ${user.last_name}` : "-";
+                        }}
+                    />
+
+                    <FunctionField
+                        label="Forwarder"
+                        render={(record: any) => {
+                            const forwarder = record?.offer?.forwarder;
+                            return forwarder ? `${forwarder.first_name} ${forwarder.last_name}` : "-";
+                        }}
+                    />
                 </Datagrid>
             )}
         </Box>
@@ -190,7 +279,6 @@ const OrderList = (props: any) => (
         title={<Title />}
         actions={false}
         filterDefaultValues={{ type: "public" }}
-
         {...props}
         sx={(theme) => ({
             "& .RaList-main": {
