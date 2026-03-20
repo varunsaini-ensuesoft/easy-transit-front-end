@@ -15,6 +15,9 @@ import {
     Tab,
     TextField as MuiTextField,
     InputAdornment,
+    Chip,
+    useTheme,
+    alpha,
 } from "@mui/material";
 import SearchIcon from "@mui/icons-material/Search";
 import { useLocation } from "react-router-dom";
@@ -251,8 +254,10 @@ const OrdersListContent = () => {
                     <TextField label="Commentaire" source="comment" />
                     <DateField label="Créé le" source="date_creation" />
                     <DateField label="Livraison le" source="delivery_date" />
-                    <ChipField label="Statut" source="status" />
-
+<FunctionField
+    label="Statut"
+    render={(record: any) => <OrderStatusChip status={record?.status} />}
+/>
                     <FunctionField
                         label="Client"
                         render={(record: any) => {
@@ -273,6 +278,73 @@ const OrdersListContent = () => {
         </Box>
     );
 };
+
+const getOrderStatusConfig = (theme: any, status?: string) => {
+    switch (status) {
+        case "Acceptée":
+            return {
+                label: "Acceptée",
+                bg: alpha(theme.palette.info.main, 0.12),
+                color: theme.palette.info.dark,
+            };
+
+        case "Annulée":
+            return {
+                label: "Annulée",
+                bg: alpha(theme.palette.error.main, 0.12),
+                color: theme.palette.error.dark,
+            };
+
+        case "En cours":
+            return {
+                label: "En cours",
+                bg: alpha(theme.palette.warning.main, 0.12),
+                color: theme.palette.warning.dark,
+            };
+
+        case "Livraison confirmée":
+            return {
+                label: "Livraison confirmée",
+                bg: alpha(theme.palette.success.main, 0.12),
+                color: theme.palette.success.dark,
+            };
+
+       case "Fermée":
+    return {
+        label: "Fermée",
+        bg: alpha(theme.palette.secondary.main, 0.12), // purple
+        color: theme.palette.secondary.dark,
+    };
+
+        default:
+            return {
+                label: status || "Inconnu",
+                bg: alpha(theme.palette.text.secondary, 0.12),
+                color: theme.palette.text.secondary,
+            };
+    }
+};
+
+const OrderStatusChip = ({ status }: { status?: string }) => {
+    const theme = useTheme();
+    const config = getOrderStatusConfig(theme, status);
+
+    return (
+        <Chip
+            label={config.label}
+            size="small"
+            sx={{
+                backgroundColor: config.bg,
+                color: config.color,
+                fontWeight: 700,
+                borderRadius: "8px",
+            }}
+        />
+    );
+};
+
+
+
 
 const OrderList = (props: any) => (
     <List

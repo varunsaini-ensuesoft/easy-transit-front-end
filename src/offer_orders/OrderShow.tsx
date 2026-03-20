@@ -163,28 +163,28 @@ const TrackingDetailsInline = () => {
   if (!record) return null;
 
   const trackingSteps = record.gupe || [];
-if (!trackingSteps.length) {
+  if (!trackingSteps.length) {
     return (
-        <Box
-            mt={2}
-            sx={(theme) => ({
-                p: 3,
-                border: `1px dashed ${theme.palette.divider}`,
-                borderRadius: 2,
-                textAlign: 'center',
-                backgroundColor: alpha(theme.palette.text.secondary, 0.04),
-            })}
-        >
-            <Typography variant="body2" sx={{ fontWeight: 600 }}>
-                No Accepted Offer Yet
-            </Typography>
+      <Box
+        mt={2}
+        sx={(theme) => ({
+          p: 3,
+          border: `1px dashed ${theme.palette.divider}`,
+          borderRadius: 2,
+          textAlign: "center",
+          backgroundColor: alpha(theme.palette.text.secondary, 0.04),
+        })}
+      >
+        <Typography variant="body2" sx={{ fontWeight: 600 }}>
+          No Accepted Offer Yet
+        </Typography>
 
-            <Typography variant="caption" color="text.secondary">
-                Tracking will appear once an offer is accepted.
-            </Typography>
-        </Box>
+        <Typography variant="caption" color="text.secondary">
+          Tracking will appear once an offer is accepted.
+        </Typography>
+      </Box>
     );
-}
+  }
   const deliveredCount = trackingSteps.filter(
     (item: any) => item?.statut === "Délivré"
   ).length;
@@ -198,12 +198,12 @@ if (!trackingSteps.length) {
   return (
     <Box
       mt={2}
-        sx={(theme) => ({
-          width: "100%",
-          maxWidth: "100%",
-          minWidth: 0,
-          overflowX: "hidden",
-        })}
+      sx={(theme) => ({
+        width: "100%",
+        maxWidth: "100%",
+        minWidth: 0,
+        overflowX: "hidden",
+      })}
     >
       <Box display="flex" alignItems="center" gap={1} mb={1}>
         <LocalShippingOutlinedIcon color="action" />
@@ -322,7 +322,6 @@ if (!trackingSteps.length) {
                     }
                   >
                     <Box display="flex" alignItems="center" gap={1}>
-                     
                       <Typography
                         variant="body2"
                         sx={{ fontWeight: 700, lineHeight: 1.4 }}
@@ -847,8 +846,68 @@ export const GeneralInfoShow = () => (
       <DateField label="Livraison prévue le" source="delivery_date" />
     </Labeled>
 
-    <Labeled>
-      <ChipField label="Statut" source="status" />
+    <Labeled label="Statut">
+      <FunctionField
+        render={(record: any) => {
+          const theme = useTheme();
+          const status = record?.status || "-";
+
+          let bg = alpha(theme.palette.primary.main, 0.12);
+          let color = theme.palette.primary.dark;
+
+          switch (status) {
+            case "Acceptée":
+              bg = alpha(theme.palette.info.main, 0.12);
+              color = theme.palette.info.dark;
+              break;
+
+            case "Annulée":
+              bg = alpha(theme.palette.error.main, 0.12);
+              color = theme.palette.error.dark;
+              break;
+
+            case "En cours":
+              bg = alpha(theme.palette.warning.main, 0.12);
+              color = theme.palette.warning.dark;
+              break;
+
+            case "Livraison confirmée":
+              bg = alpha(theme.palette.success.main, 0.12);
+              color = theme.palette.success.dark;
+              break;
+
+            case "Fermée":
+              bg = alpha(theme.palette.secondary.main, 0.12);
+              color = theme.palette.secondary.dark;
+              break;
+
+            default:
+              bg =  alpha(theme.palette.text.secondary, 0.12),
+                color =theme.palette.text.secondary;
+          }
+
+          return (
+            <Box
+              sx={{
+                width: "100%",
+                minHeight: 30,
+                borderRadius: "999px",
+                backgroundColor: bg,
+                color: color,
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                px: 2,
+                fontSize: "0.8125rem",
+                fontWeight: 500,
+                lineHeight: 1.75,
+              }}
+            >
+              {status}
+            </Box>
+          );
+        }}
+      />
     </Labeled>
   </Stack>
 );
