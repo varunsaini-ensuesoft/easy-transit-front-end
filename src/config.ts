@@ -4,9 +4,9 @@
 // export const API_BASE_URL = "@@API_BASE_URI@@"
 // export const HOST = "@@HOST@@" 
 
+// https://exogamous-overearnestly-hudson.ngrok-free.dev
 
-
-const BASE = "https://easy-transit-backe-end.onrender.com"   //"http://ec2-35-180-103-212.eu-west-3.compute.amazonaws.com"
+const BASE = "https://exogamous-overearnestly-hudson.ngrok-free.dev"   //"http://ec2-35-180-103-212.eu-west-3.compute.amazonaws.com"
 export const API_BASE_URL = `${BASE}/api/admin`
 export const HOST = `${BASE}:8085` 
 export const TEST_HOST = `http://ns3104690.ip-147-135-139.eu:8085`
