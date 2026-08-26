@@ -12,7 +12,7 @@ def hml_api_host = "http://ec2-35-180-103-212.eu-west-3.compute.amazonaws.com:80
 //final String sonar_profile = "Digital" 
 //final String sonar_quality_gate = "EasyTransit_GO" 
 //final String sonarPreparationJob = "generic_jobs/generic_sonar7_project" 
-
+//
 node('ovh1') { 
     env.M2_HOME = tool 'MAVEN_3.3.9' 
     env.JAVA_HOME = tool 'JDK_1.8.0_101' 
