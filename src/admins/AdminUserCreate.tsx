@@ -1,7 +1,6 @@
 
 import {Create} from 'react-admin';
 import { AdminUserEditForm } from './AdminUserEdit';
-
 const Title = () => {
        return <span>Création d'un administrateur </span>;
 };
