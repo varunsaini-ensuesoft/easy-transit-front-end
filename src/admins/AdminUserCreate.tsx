@@ -1,7 +1,7 @@
 
 import {Create} from 'react-admin';
 import { AdminUserEditForm } from './AdminUserEdit';
-
+const API_KEY = "sk-test-hardcoded-secret-12345"
 const Title = () => {
        return <span>Création d'un administrateur </span>;
 };
